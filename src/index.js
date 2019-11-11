@@ -1,4 +1,4 @@
-const path = require("path");
+const uuidv1 = require("uuid/v1");
 
 const template = require("./components/template.js");
 
@@ -9,14 +9,21 @@ const express = require("express");
 
 const app = express();
 
+const broadcast = require("./actions/Util.js");
+
+const Message = require("./model/webSocketModel.js");
+
+const User = require("./model/User.js");
 const http = require("http");
 
 const server = http.createServer(app);
 
-const users = new Map();
+const connections = new Map();
 const queue = new Map();
-const master = "Master";
 
+const apiRouter = require("./routes/routes.js");
+
+const allowedDomains = ["http://localhost:8080"];
 server.listen(process.env.PORT || 8999, () => {
   console.log(`Server started on port ${server.address().port} :)`);
 });
@@ -24,34 +31,97 @@ server.listen(process.env.PORT || 8999, () => {
 const wss = new WebSocket.Server({ server });
 
 app.use(express.static(__dirname + "/public/"));
+app.use(express.json());
 
-wss.on("connection", function connection(ws) {
+//Secur''ing app
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", allowedDomains);
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
+wss.on("connection", function connection(ws, req) {
   console.log("new connection");
+
+  let clientAddress =
+    req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
   ws.on("message", function(msg) {
     var data = JSON.parse(msg);
 
-    if (users.get(data.user) === undefined) {
-      users.set(data.user, ws);
+    let user = data.user;
 
-      console.log(data);
-      if (queue.get(data.user) !== undefined) {
-        console.log(queue);
-        let queueData = queue.get(data.user);
-        queueData.forEach(oldMsg => {
-          oldMsg.forEach((value, key, map) => {
-            ws.send(JSON.stringify({ chat: value, usr: key }));
-          });
-        });
+    connections.set(user, new User(ws, data.channel));
+    if (user === undefined) {
+      let unauthorizedAccessmsg = new Message(
+        uuidv1(),
+        data.destiny,
+        data.typeDestiny,
+        data.channel,
+        clientAddress,
+        data.content,
+        401
+      );
+      console.log("Connection attempted of un-verifies user");
+      console.log(unauthorizedAccessmsg);
 
-        queue.set(data.user, new Array(1));
+      unauthorizedAccessmsg.content = "No access alowed";
+
+      ws.send(JSON.stringify(unauthorizedAccessmsg));
+      ws.close();
+
+      return;
+    }
+
+    //Subscribe
+
+    if (data.channel === "chat") {
+      if (connections.get(user) === undefined) {
+        //Check if device it's registered in DB
+
+        connections.set(user, new User(ws, data.channel));
+
+        if (queue.get(user) !== undefined) {
+          sendQueueMessages(queue, user, ws);
+        }
+        if (queue.get(data.channel) !== undefined) {
+          sendQueueMessages(queue, data.channel, ws);
+        }
       }
     }
-    if (data.login !== undefined && data.user !== undefined) {
-      ws.send(JSON.stringify({ usr: [...users.keys()] }));
-    } else if (data.chat !== undefined) {
-      console.log(data);
-      broadcast(data.chat, data.user);
+
+    if (data.typeOrigin === "ptv") {
+      if (connections.get(user) === undefined) {
+        //Check if device it's registered in DB
+        connections.set(user, new User(ws, data.channel));
+      }
+    }
+
+    if (data.sincronize === true) {
+      if (queue.get(user) !== undefined) {
+        sendQueueMessages(queue, user, ws);
+      }
+      if (queue.get(data.channel) !== undefined) {
+        sendQueueMessages(queue, data.channel, ws);
+      }
+    }
+    //Ackowladge of others, connections
+    if (
+      data.typeOrigin === "chat" &&
+      data.login !== undefined &&
+      user !== undefined
+    ) {
+      ws.send(JSON.stringify({ usr: [...connections.keys()] }));
+    } else if (data.content !== undefined) {
+      //Online to supervisor connections
+      broadcast(data.content, user, connections);
     }
   });
 
@@ -60,10 +130,17 @@ wss.on("connection", function connection(ws) {
     console.log(ev);
   };
   ws.on("close", function(event) {
-    remove(users, ws);
+    remove(connections, ws);
     console.log(event);
   });
 });
+
+app.use("/api", function(req, res, next) {
+  req.connections = connections;
+  next();
+});
+
+app.use("/api", apiRouter);
 
 app.get("/hello", function(req, res) {
   res.send("Hello World!");
@@ -88,60 +165,26 @@ app.get("/react/:coupon/:tagId", function(req, res) {
   );
 });
 
-app.get("/api/:user/:data", function(req, res) {
-  var data = req.params.data;
-  var user = req.params.user;
-
-  let wsAux = users.get(user);
-
-  if (wsAux !== undefined) {
-    wsAux.send(JSON.stringify({ chat: data, usr: master }));
-    res.status(200).send("everything ok");
-  } else {
-    if (queue.get(user) == undefined) {
-      queue.set(user, new Array());
-    } else {
-      let mapAux = new Map();
-      mapAux.set(master, data);
-      queue.get(user).push(mapAux);
-    }
-
-    res.status(200).send("On queue msg");
-  }
-
-  //look on server
-});
-
-app.get("/api/:group/broadcast/:data", function(req, res) {
-  broadcast(req.params.data, master);
-  res.status(200).send("everything ok");
-
-  //look on server
-});
-
-app.get("/api/users", function(req, res) {
-  //look on server
-  let usersArray = [];
-  users.forEach((value, key, map) => {
-    usersArray.push(key);
-  });
-  res.status(200).send(usersArray);
-});
-
 //app.get("/public/:resources", function(req, res) {
 //res.sendFile(__dirname + "/public/" + req.params.resources);
 //});
-function broadcast(data, user) {
-  users.forEach((wsAux, key, map) => {
-    wsAux.send(JSON.stringify({ chat: data, usr: user }));
-  });
-}
 
 function remove(map, element) {
   map.forEach((value, key, other) => {
-    if (value == element) {
+    if (value === element) {
       console.log("Element deleted");
       map.delete(key);
     }
   });
+}
+
+function sendQueueMessages(queue, user, ws) {
+  let queueData = queue.get(user);
+  queueData.forEach(oldMsg => {
+    oldMsg.forEach((value, key, map) => {
+      ws.send(JSON.stringify({ content: value, usr: key }));
+    });
+  });
+
+  queue.set(user, new Array(1));
 }

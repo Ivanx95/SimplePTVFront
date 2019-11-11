@@ -22,8 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   var response = document.querySelectorAll("#responseSpan")[0];
 
   let userslUl = document.querySelectorAll("#usersUl")[0];
-  let chatUI = document.querySelectorAll("#chat")[0];
-  let ws = new WebSocket("wss://e3obb.sse.codesandbox.io"); // event emmited when connected
+  let chatUI = document.querySelectorAll("#content")[0];
+  let ws = new WebSocket("wss://smers.sse.codesandbox.io/"); // event emmited when connected
   ws.onopen = function() {
     console.log("websocket is connected ..."); // sending a send event to websocket server
   }; // event emmited when receiving message
@@ -36,8 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.usr !== undefined) {
       var usersAux = data.usr;
 
-      if (data.chat !== undefined) {
-        var chatMsg = data.chat;
+      if (data.content !== undefined) {
+        var chatMsg = data.content;
         appendMsg(usersAux + " : " + chatMsg);
       }
     }
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logOn();
         ws.send(JSON.stringify({ user: inputLog.value, login: true }));
       } else {
-        ws.send(JSON.stringify({ user: mySession, chat: inputLog.value }));
+        ws.send(JSON.stringify({ user: mySession, content: inputLog.value }));
       }
       inputLog.value = "";
     }
