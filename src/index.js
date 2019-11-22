@@ -4,7 +4,7 @@ const template = require("./components/template.js");
 
 const WebSocket = require("ws");
 
-const ReactServer = require("./server.js");
+const { ReactServer } = require("/sandbox/other/components/server.js");
 const express = require("express");
 
 const app = express();
@@ -22,6 +22,7 @@ const connections = new Map();
 const queue = new Map();
 
 const apiRouter = require("./routes/routes.js");
+const ssrRouting = require("/sandbox/other/routes/ServerSideRendering.js");
 
 const allowedDomains = ["http://localhost:8080"];
 server.listen(process.env.PORT || 8999, () => {
@@ -112,15 +113,25 @@ wss.on("connection", function connection(ws, req) {
         sendQueueMessages(queue, data.channel, ws);
       }
     }
+
     //Ackowladge of others, connections
     if (
-      data.typeOrigin === "chat" &&
+      //data.typeOrigin === "chat" &&
       data.login !== undefined &&
       user !== undefined
     ) {
-      ws.send(JSON.stringify({ usr: [...connections.keys()] }));
+      console.log("Here");
+
+      ws.send(JSON.stringify({ connections: [...connections.keys()] }));
+
+      connections.forEach((item, key, map) => {
+        if (item.ws !== ws) {
+          item.ws.send(JSON.stringify({ connections: [user] }));
+        }
+      });
     } else if (data.content !== undefined) {
       //Online to supervisor connections
+      // ws.send(JSON.stringify({ connections: [...connections.keys()] }));
       broadcast(data.content, user, connections);
     }
   });
@@ -142,6 +153,12 @@ app.use("/api", function(req, res, next) {
 
 app.use("/api", apiRouter);
 
+app.use("/ssr", function(req, res, next) {
+  next();
+});
+
+app.use("/ssr", ssrRouting);
+
 app.get("/hello", function(req, res) {
   res.send("Hello World!");
 });
@@ -150,20 +167,20 @@ app.get("/", function(req, res) {
   res.sendFile(__dirname + "/public/index.html");
 });
 
-app.get("/react/:coupon/:tagId", function(req, res) {
-  var img = req.query.img;
+// app.get("/react/:coupon/:tagId", function(req, res) {
+//   var img = req.query.img;
 
-  //look on server
-  img = "https://e3obb.sse.codesandbox.io/" + img + ".png";
-  res.send(
-    template(
-      ReactServer({ person: req.params.tagId, couponCode: req.params.coupon }),
-      req.params.coupon,
-      "Esto es una descripcion",
-      img
-    )
-  );
-});
+//   //look on server
+//   img = "https://e3obb.sse.codesandbox.io/" + img + ".png";
+//   res.send(
+//     template(
+//       ReactServer({ tagId: req.params.tagId, couponCode: req.params.coupon }),
+//       req.params.coupon,
+//       "Esto es una descripcion",
+//       img
+//     )
+//   );
+// });
 
 //app.get("/public/:resources", function(req, res) {
 //res.sendFile(__dirname + "/public/" + req.params.resources);
@@ -171,7 +188,7 @@ app.get("/react/:coupon/:tagId", function(req, res) {
 
 function remove(map, element) {
   map.forEach((value, key, other) => {
-    if (value === element) {
+    if (value.ws === element) {
       console.log("Element deleted");
       map.delete(key);
     }

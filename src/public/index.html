@@ -75,7 +75,7 @@
           </div>
         </div>
 
-        <div class="navbar-end">
+        <!-- <div class="navbar-end">
           <div class="navbar-item">
             <div class="buttons">
               <a class="button is-primary">
@@ -86,7 +86,7 @@
               </a>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </nav>
     <section class="section">
@@ -96,28 +96,86 @@
         </h1>
         <p class="subtitle">Un muy simple PTV solo por $50 MXN al mes</p> -->
 
-        <span id="responseSpan" class="subtitle"></span>
+        
 
         <div class="columns">
-          <div class="column">
-            <h1 class="title">Conversacion</h1>
-            <ul id="chat"></ul>
-          </div>
-          <div class="column">
-            <div class="field">
-              <label for="nombre" id="labelName" class="label">Nombre</label>
 
-              <div class="control">
-                <input type="text" name="nombre" id="logInput" class="input" />
-              </div>
+            <div class="column is-one-fifth" >
+
+                <nav class="panel" id="usersConnected">
+                    <p class="panel-heading">
+                      Usuarios
+                    </p>
+                    <div class="panel-block">
+                      <p class="control has-icons-left">
+                        <input class="input" type="text" placeholder="Search">
+                        <span class="icon is-left">
+                          <i class="fas fa-search" aria-hidden="true"></i>
+                        </span>
+                      </p>
+                    </div>
+                    
+                    <!-- <a class="panel-block is-active">
+                      <span class="panel-icon has-text-success">
+                        <i class="fas fa-circle" aria-hidden="true"></i>
+                      </span>
+
+                      <div>
+                        Default
+                      </div>
+                    </a> -->
+                   
+                   
+                    <!-- <div class="panel-block">
+                      <button class="button is-link is-outlined is-fullwidth">
+                        Reset all filters
+                      </button>
+                    </div> -->
+                  </nav>
+               
             </div>
 
-            <div class="field">
-              <div class="control">
-                <button class="button is-primary" id="sendBtn">
-                  Log In
-                </button>
+          <div class="column">
+            <div class="card">
+              <header class="card-header">
+                <p class="card-header-title">
+                  Conversacion
+                </p>
+              </header>
+                  <div id="chatContainer" class="card-content" style="height: 300px;overflow-y: auto;"/>
               </div>
+              <footer class="card-footer">
+
+                <section class="hero">
+                    <div class="hero-body">
+                      <div class="container">
+                        <div class="field">
+                          <label for="nombre" id="labelName" class="label"
+                            >Nombre</label>
+
+                          <div class="control">
+                            <input
+                              type="text"
+                              name="nombre"
+                              id="logInput"
+                              class="input"
+                            />
+                          </div>
+                        </div>
+
+                        <div class="field">
+                          <div class="control">
+                            <button class="button is-primary" id="sendBtn">
+                              Log In
+                            </button>
+                          </div>
+                        </div>
+                    </div>
+                  </div>
+              </section>
+              </footer>
+
+              </footer>
             </div>
           </div>
         </div>

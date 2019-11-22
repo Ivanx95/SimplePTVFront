@@ -2,8 +2,11 @@ const express = require("express");
 const app = express();
 const apiRouter = express.Router();
 
+var qr = require("qr-image");
+
 const broadcast = require("/sandbox/src/actions/Util.js");
 const master = "Master";
+
 apiRouter.route("/").get(function name(req, res) {
   let connections = req.connections;
   if (connections !== undefined) {
@@ -14,7 +17,7 @@ apiRouter.route("/").get(function name(req, res) {
   }
 });
 
-app.get("/info/connections", function(req, res) {
+apiRouter.route("/info/connections").get(function(req, res) {
   //look on server
 
   let connections = req.connections;
@@ -25,7 +28,7 @@ app.get("/info/connections", function(req, res) {
   res.status(200).send(usersArray);
 });
 
-app.post("/api/publish/user/:user", function(req, res) {
+apiRouter.route("/publish/user/:user").post(function(req, res) {
   var data = req.body;
   var user = req.params.user;
 
@@ -69,10 +72,16 @@ app.post("/api/publish/user/:user", function(req, res) {
   //look on server
 });
 
-app.get("/api/:channel/broadcast/:data", function(req, res) {
+apiRouter.route("/:channel/broadcast/:data").get(function(req, res) {
   let connections = req.connections;
   broadcast(req.params.data, master, connections);
   res.status(200).send("everything ok");
+});
+
+apiRouter.route("/qr/:data").get(function(req, res) {
+  var code = qr.image(req.params.data, { type: "svg" });
+  res.type("svg");
+  code.pipe(res);
 });
 
 module.exports = apiRouter;

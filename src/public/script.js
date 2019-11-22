@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+  let documentTitle = "SimpleChat ";
+
   var logged = false;
   var mySession;
   const $navBarBurguer = Array.prototype.slice.call(
@@ -21,30 +23,58 @@ document.addEventListener("DOMContentLoaded", () => {
   var users = [];
   var response = document.querySelectorAll("#responseSpan")[0];
 
-  let userslUl = document.querySelectorAll("#usersUl")[0];
-  let chatUI = document.querySelectorAll("#content")[0];
+  let chatUI = document.querySelectorAll("#chatContainer")[0];
+  let usersConnected = document.querySelectorAll("#usersConnected")[0];
   let ws = new WebSocket("wss://smers.sse.codesandbox.io/"); // event emmited when connected
   ws.onopen = function() {
     console.log("websocket is connected ..."); // sending a send event to websocket server
   }; // event emmited when receiving message
   ws.onmessage = function(ev) {
-    console.log(ev);
     // response.innerHTML = ev.data;
 
     let data = JSON.parse(ev.data);
 
+    console.log(data);
     if (data.usr !== undefined) {
       var usersAux = data.usr;
 
       if (data.content !== undefined) {
         var chatMsg = data.content;
-        appendMsg(usersAux + " : " + chatMsg);
+
+        newExcitingAlerts = function() {
+          var oldTitle = document.title;
+          var msg = documentTitle + "new message from " + usersAux;
+          var timeoutId;
+          var blink = function() {
+            document.title = document.title == msg ? " " : msg;
+          };
+          var clear = function() {
+            clearInterval(timeoutId);
+            document.title = oldTitle;
+            window.onmousemove = null;
+            timeoutId = null;
+          };
+          return function() {
+            if (!timeoutId) {
+              timeoutId = setInterval(blink, 1000);
+              window.onmousemove = clear;
+            }
+          };
+        };
+
+        newExcitingAlerts();
+        appendMsg(usersAux, chatMsg);
       }
+    } else if (data.connections !== undefined) {
+      var connections = data.connections;
+      connections.forEach(function(e) {
+        appendUser(e);
+      });
     }
   };
 
   ws.onclose = function(evt) {
-    appendMsg("Connection close with server");
+    appendMsg("Server", "Connection close with server");
     logOff();
   };
   var btnSend = document.querySelectorAll("#sendBtn")[0];
@@ -73,10 +103,90 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function appendMsg(data) {
-    let li = document.createElement("li");
-    li.innerHTML = data;
-    chatUI.appendChild(li);
+  function appendUser(user) {
+    let panelBlockAnchor = document.createElement("a");
+    panelBlockAnchor.classList.add("panel-block");
+    panelBlockAnchor.classList.add("is-active");
+
+    let spanIcon = document.createElement("span");
+
+    spanIcon.classList.add("panel-icon");
+    spanIcon.classList.add("has-text-success");
+
+    let iIcon = document.createElement("i");
+
+    iIcon.classList.add("fas");
+    iIcon.classList.add("fa-circle");
+
+    iIcon.attributes["aria-hidden"] = "true";
+
+    spanIcon.appendChild(iIcon);
+
+    let divAux = document.createElement("div");
+    divAux.innerHTML = user;
+
+    panelBlockAnchor.appendChild(spanIcon);
+
+    panelBlockAnchor.appendChild(divAux);
+
+    usersConnected.appendChild(panelBlockAnchor);
+  }
+  function appendMsg(user, data) {
+    let columnsContainerEl = document.createElement("div");
+
+    columnsContainerEl.classList.add("columns");
+
+    let incomingMsgColumnel = document.createElement("div");
+
+    incomingMsgColumnel.classList.add("column");
+    incomingMsgColumnel.classList.add("is-three-quarters");
+
+    let fullColumnEl = document.createElement("div");
+
+    fullColumnEl.classList.add("column");
+
+    let articleAux = document.createElement("article");
+    articleAux.classList.add("message");
+    // articleAux.setAttribute("style", "width:85%;");
+
+    if (user === "Server") {
+      articleAux.classList.add("is-warning");
+      columnsContainerEl.appendChild(fullColumnEl);
+      fullColumnEl.appendChild(articleAux);
+    } else if (user === mySession) {
+      articleAux.classList.add("is-primary");
+      columnsContainerEl.appendChild(fullColumnEl);
+      columnsContainerEl.appendChild(incomingMsgColumnel);
+      incomingMsgColumnel.appendChild(articleAux);
+    } else {
+      articleAux.classList.add("is-link");
+      columnsContainerEl.appendChild(incomingMsgColumnel);
+      columnsContainerEl.appendChild(fullColumnEl);
+      incomingMsgColumnel.appendChild(articleAux);
+    }
+
+    let divUser = document.createElement("div");
+    divUser.classList.add("message-header");
+
+    let pAux = document.createElement("p");
+
+    pAux.innerHTML = user;
+
+    let messageBodyDiv = document.createElement("div");
+
+    messageBodyDiv.classList.add("message-body");
+
+    // let divData = document.createElement("code");
+    messageBodyDiv.innerHTML = data;
+    divUser.innerHTML = user;
+    // divUser.appendChild(pAux);
+    // messageBodyDiv.appendChild(divData);
+    articleAux.appendChild(divUser);
+    articleAux.appendChild(messageBodyDiv);
+    chatUI.appendChild(columnsContainerEl);
+
+    let chatContainer = document.getElementById("chatContainer");
+    chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
   function logOn() {

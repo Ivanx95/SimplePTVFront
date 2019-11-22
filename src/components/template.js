@@ -11,7 +11,7 @@ module.exports = function htmlTemplate(reactDom, metaTitle, metaDesc, img) {
     <title>SimplePTV</title>
     <link
       rel="shortcut icon"
-      href="https://e3obb.sse.codesandbox.io/dna.png"
+      href="https://smers.sse.codesandbox.io/dna.png"
       type="image/x-icon"
     />
     <link
@@ -26,9 +26,9 @@ module.exports = function htmlTemplate(reactDom, metaTitle, metaDesc, img) {
   <body>
     <nav class="navbar" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
-        <a class="navbar-item" href="https://e3obb.sse.codesandbox.io">
+        <a class="navbar-item" href="https://smers.sse.codesandbox.io">
           <img
-            src="https://e3obb.sse.codesandbox.io/dna.png"
+            src="https://smers.sse.codesandbox.io/dna.png"
             width="40"
             height="28"
           />
@@ -115,7 +115,7 @@ module.exports = function htmlTemplate(reactDom, metaTitle, metaDesc, img) {
       </div>
       <button class="modal-close is-large" aria-label="close"></button>
     </div>
-    <script src="https://e3obb.sse.codesandbox.io/script.js"></script>
+    <script src="https://smers.sse.codesandbox.io/script.js"></script>
   </body>
 </html>
 
