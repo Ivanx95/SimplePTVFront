@@ -1,10 +1,7 @@
 const uuidv1 = require("uuid/v1");
 
-const template = require("./components/template.js");
-
 const WebSocket = require("ws");
 
-const { ReactServer } = require("/sandbox/other/components/server.js");
 const express = require("express");
 
 const app = express();
@@ -24,13 +21,16 @@ const queue = new Map();
 const apiRouter = require("./routes/routes.js");
 const ssrRouting = require("/sandbox/other/routes/ServerSideRendering.js");
 
-const allowedDomains = ["http://localhost:8080"];
+const constants = require("/sandbox/src/libs/Constants.js");
+
+const allowedDomains = ["http://localhost:8080", "https://8bc83.csb.app/"];
 server.listen(process.env.PORT || 8999, () => {
   console.log(`Server started on port ${server.address().port} :)`);
 });
 
 const wss = new WebSocket.Server({ server });
 
+app.use(express.static("/sandbox/assets/"));
 app.use(express.static(__dirname + "/public/"));
 app.use(express.json());
 
@@ -159,32 +159,9 @@ app.use("/ssr", function(req, res, next) {
 
 app.use("/ssr", ssrRouting);
 
-app.get("/hello", function(req, res) {
-  res.send("Hello World!");
-});
-
 app.get("/", function(req, res) {
   res.sendFile(__dirname + "/public/index.html");
 });
-
-// app.get("/react/:coupon/:tagId", function(req, res) {
-//   var img = req.query.img;
-
-//   //look on server
-//   img = "https://e3obb.sse.codesandbox.io/" + img + ".png";
-//   res.send(
-//     template(
-//       ReactServer({ tagId: req.params.tagId, couponCode: req.params.coupon }),
-//       req.params.coupon,
-//       "Esto es una descripcion",
-//       img
-//     )
-//   );
-// });
-
-//app.get("/public/:resources", function(req, res) {
-//res.sendFile(__dirname + "/public/" + req.params.resources);
-//});
 
 function remove(map, element) {
   map.forEach((value, key, other) => {

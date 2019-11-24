@@ -1,7 +1,4 @@
-import React from "react";
+import ReactDom from "react-dom";
+import TestApp from "/sandbox/other/components/TestApp.js";
 
-export class App2 extends React.Component {
-  render() {
-    return <div>Hello {this.props.dt}</div>;
-  }
-}
+ReactDom.render(<TestApp />, document.getElementById("root"));

@@ -1,21 +1,14 @@
 const path = require("path");
 
 module.exports = {
-  entry: "/sandbox/other/components/App2.js",
+  entry: "/sandbox/other/components/TestApp.js",
   output: {
-    path: path.resolve(__dirname, "assets"),
+    path: path.resolve(__dirname, "assetsFront"),
     filename: "[name].js"
   },
   resolve: {
-    modules: ["node_modules"],
-    descriptionFiles: ["package.json"],
     extensions: [".js", ".jsx"]
   },
-  externals: {
-    react: "react",
-    "react-dom": "react-dom"
-  },
-
   module: {
     rules: [
       {

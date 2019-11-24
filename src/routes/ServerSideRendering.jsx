@@ -2,28 +2,24 @@ const express = require("express");
 
 const app = express();
 
-const constants = require("../libs/Constants.js");
+const constants = require("/sandbox/src/libs/Constants.js");
 
-import React from "react";
+const template = require("/sandbox/src/components/templateReact.js");
 
-const template = require("/sandbox/src/components/template.js");
-
-import { renderToString } from "react-dom/server";
-
-import { Login } from "/sandbox/other/components/Login.js";
 const ssrRouting = express.Router();
 
 ssrRouting.route("/login").get(function name(req, res) {
-  let loginForm = renderToString(<Login />);
-
   res.send(
-    template(
-      loginForm,
-      "Something",
-      "Esto es una descripcion",
-      constants.logoImg
-    )
+    template("https://smers.sse.codesandbox.io/main.js", {
+      metaTitle: "SimplePTV",
+      metaDesc: "The cheapiest ptv in town",
+      img: constants.logoImg,
+      title: "Im a title"
+    })
   );
 });
 
+ssrRouting.route("/test").get(function name(req, res) {
+  res.send("Hi");
+});
 module.exports = ssrRouting;

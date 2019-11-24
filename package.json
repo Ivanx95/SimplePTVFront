@@ -6,6 +6,7 @@
   "scripts": {
     "start": "nodemon --exec babel-node src/index.js localhost 8080",
     "pack": "webpack --config webpack.config.js",
+    "packFront": "webpack --config webpack.config.js",
     "babel": "babel src -d other",
     "build": " npm run babel && npm run pack "
   },
